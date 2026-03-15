@@ -38,7 +38,11 @@ body {
 #cur-ring { position:fixed;width:36px;height:36px;border:2px solid var(--amber);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);opacity:0;transition:width .15s,height .15s; }
 body.con #cur, body.con #cur-ring { opacity:1; }
 body.con { cursor:none; }
-body.con * { cursor:none; }
+body.con *:not(#chatBtn):not(#chatPanel):not(#chatPanel *):not(#chatIn):not(.cq):not(#chatClose):not(#chatGo) { cursor:none; }
+#chatBtn { cursor:pointer !important; }
+#chatPanel, #chatPanel * { cursor:auto !important; }
+#chatIn { cursor:text !important; }
+.cq, #chatClose, #chatGo { cursor:pointer !important; }
 #cur.big { width:20px;height:20px;background:rgba(245,158,11,0.3); }
 #cur-ring.big { width:48px;height:48px; }
 
@@ -411,26 +415,40 @@ nav {
 footer { padding:1.8rem 3rem; border-top:1.5px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; font-size:0.68rem; color:#a8a29e; background:var(--white); }
 
 /* ── CHAT WIDGET ── */
-.chat-launcher { position:fixed; bottom:2rem; right:2rem; z-index:700; }
+.chat-launcher { position:fixed; bottom:1.5rem; right:1.5rem; z-index:9000; }
 .chat-fab {
   width:58px; height:58px; border-radius:50%;
   background:var(--dark); border:none; cursor:pointer;
   display:flex; align-items:center; justify-content:center;
-  box-shadow:0 8px 24px rgba(0,0,0,.22);
+  box-shadow:0 8px 24px rgba(0,0,0,.3);
   position:relative; transition:transform .2s;
 }
 .chat-fab:hover { transform:scale(1.08); }
 .fab-dot { position:absolute; top:-3px; right:-3px; width:14px; height:14px; border-radius:50%; background:var(--amber); border:2.5px solid var(--dark); animation:pdot 2.5s infinite; }
 .chat-window {
-  position:fixed; bottom:6rem; right:2rem; z-index:700;
-  width:355px; background:var(--white);
-  border:1.5px solid var(--border); border-radius:22px;
-  box-shadow:0 24px 64px rgba(0,0,0,.1);
-  display:flex; flex-direction:column; overflow:hidden;
-  transform:scale(.88) translateY(18px); opacity:0; pointer-events:none;
-  transition:transform .28s cubic-bezier(.34,1.56,.64,1), opacity .2s;
+  position:fixed;
+  bottom:80px;
+  right:1.5rem;
+  z-index:9000;
+  width:340px;
+  max-height:520px;
+  background:#ffffff;
+  border:2px solid var(--border);
+  border-radius:20px;
+  box-shadow:0 24px 64px rgba(0,0,0,.18), 0 4px 16px rgba(245,158,11,.15);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  visibility:hidden;
+  opacity:0;
+  transform:scale(.9) translateY(12px);
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1), opacity .2s, visibility .2s;
 }
-.chat-window.open { transform:scale(1) translateY(0); opacity:1; pointer-events:all; }
+.chat-window.open {
+  visibility:visible;
+  opacity:1;
+  transform:scale(1) translateY(0);
+}
 .chat-head {
   padding:1rem 1.2rem; background:var(--cream);
   border-bottom:1px solid var(--border);
@@ -938,126 +956,169 @@ footer { padding:1.8rem 3rem; border-top:1.5px solid var(--border); display:flex
 </footer>
 
 <!-- CHAT WIDGET -->
-<div class="chat-launcher">
-  <div class="chat-window" id="chatWin">
-    <div class="chat-head">
-      <div class="chat-av">
-        <svg viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="10" r="5.5" fill="white" opacity=".92"/>
-          <ellipse cx="9.5" cy="9" rx="1.6" ry="2" fill="#f59e0b"/>
-          <ellipse cx="14.5" cy="9" rx="1.6" ry="2" fill="#f59e0b"/>
-          <path d="M9 13 Q12 16 15 13" stroke="#f59e0b" stroke-width="1.3" stroke-linecap="round" fill="none"/>
-          <circle cx="5.5" cy="5.5" r="1.1" fill="white" opacity=".7"/>
-          <circle cx="18.5" cy="5.5" r="1.1" fill="white" opacity=".7"/>
-          <circle cx="12" cy="3.5" r="1.1" fill="white" opacity=".7"/>
-          <line x1="5.5" y1="5.5" x2="9.5" y2="9" stroke="white" stroke-width=".7" opacity=".5"/>
-          <line x1="18.5" y1="5.5" x2="14.5" y2="9" stroke="white" stroke-width=".7" opacity=".5"/>
-          <line x1="12" y1="3.5" x2="12" y2="8" stroke="white" stroke-width=".7" opacity=".5"/>
-        </svg>
-      </div>
-      <div>
-        <div class="chat-hname">Sharbel AI</div>
-        <div class="chat-hstatus">● ask me anything</div>
-      </div>
-      <button class="chat-x" onclick="toggleChat()">✕</button>
-    </div>
-    <div class="chat-body" id="chatBody">
-      <div class="msg bot">Hi! 👋 I'm Sharbel's AI assistant. Ask me about his skills, projects, GitHub, or how to get in touch!</div>
-    </div>
-    <div class="chat-sugs" id="chatSugs">
-      <button class="sug" onclick="qa('What are your top skills?')">Top skills</button>
-      <button class="sug" onclick="qa('Tell me about your projects')">Projects</button>
-      <button class="sug" onclick="qa('What is your GitHub?')">GitHub</button>
-      <button class="sug" onclick="qa('Are you available for work?')">Availability</button>
-    </div>
-    <div class="chat-inp-row">
-      <input class="chat-inp" id="chatInp" type="text" placeholder="Ask something..." onkeydown="if(event.key==='Enter')sendChat()">
-      <button class="chat-send" onclick="sendChat()">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="#fef08a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-    </div>
-  </div>
-  <button class="chat-fab" onclick="toggleChat()">
-    <div class="fab-dot"></div>
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <circle cx="14" cy="12" r="7.5" fill="#fde047"/>
-      <ellipse cx="11" cy="11" rx="2" ry="2.5" fill="#fffbeb"/>
-      <ellipse cx="17" cy="11" rx="2" ry="2.5" fill="#fffbeb"/>
-      <path d="M10 15 Q14 19 18 15" stroke="#fffbeb" stroke-width="1.6" stroke-linecap="round" fill="none"/>
-      <circle cx="8" cy="6.5" r="1.3" fill="#fde047" opacity=".8"/>
-      <circle cx="20" cy="6.5" r="1.3" fill="#fde047" opacity=".8"/>
-      <circle cx="14" cy="4.5" r="1.3" fill="#fde047" opacity=".8"/>
-    </svg>
-  </button>
+<style>
+#chatBtn{position:fixed;bottom:24px;right:24px;z-index:99999;width:60px;height:60px;border-radius:50%;background:#1c1917;border:none;cursor:pointer;box-shadow:0 8px 28px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;}
+#chatBtn:hover{transform:scale(1.08)}
+#chatDot{position:absolute;top:-2px;right:-2px;width:14px;height:14px;border-radius:50%;background:#f59e0b;border:2px solid #1c1917;}
+#chatPanel{display:none;position:fixed;bottom:96px;right:24px;z-index:99999;width:320px;background:#ffffff;border:2px solid #fde68a;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.2);flex-direction:column;overflow:hidden;}
+#chatPanel.show{display:flex;}
+#chatTop{padding:14px 16px;background:#fffdf0;border-bottom:1px solid #fde68a;display:flex;align-items:center;gap:10px;}
+#chatAv{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#fde047,#f59e0b);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#chatTitle{font-family:Georgia,serif;font-size:15px;color:#1c1917;font-weight:bold;}
+#chatSub{font-size:11px;color:#a16207;font-weight:600;}
+#chatClose{margin-left:auto;background:none;border:none;font-size:18px;color:#a8a29e;cursor:pointer;line-height:1;padding:2px 6px;}
+#chatClose:hover{color:#1c1917;}
+#chatMsgs{padding:12px;display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;background:#fff;}
+.cmsg{max-width:85%;font-size:13px;line-height:1.55;padding:9px 13px;border-radius:14px;}
+.cmsg.b{background:#fffdf0;color:#1c1917;border:1px solid #fde68a;border-radius:14px 14px 14px 3px;align-self:flex-start;}
+.cmsg.u{background:#1c1917;color:#fef08a;border-radius:14px 14px 3px 14px;align-self:flex-end;}
+.cmsg.t span{display:inline-block;width:7px;height:7px;border-radius:50%;background:#f59e0b;margin:0 2px;animation:td 1.1s infinite;}
+.cmsg.t span:nth-child(2){animation-delay:.2s}
+.cmsg.t span:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,80%,100%{transform:scale(.5);opacity:.4}40%{transform:scale(1);opacity:1}}
+#chatQs{padding:6px 12px 8px;display:flex;flex-wrap:wrap;gap:5px;background:#fff;border-top:1px solid #fde68a;}
+.cq{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:100px;border:1.5px solid #fde68a;background:#fffdf0;color:#78350f;cursor:pointer;}
+.cq:hover{background:#fef9c3;border-color:#facc15;}
+#chatInpWrap{padding:10px 12px;border-top:1px solid #fde68a;display:flex;gap:8px;background:#fff;}
+#chatIn{flex:1;font-size:13px;padding:8px 13px;border-radius:100px;border:1.5px solid #fde68a;background:#fffdf0;color:#1c1917;outline:none;font-family:inherit;}
+#chatIn:focus{border-color:#f59e0b;}
+#chatGo{width:34px;height:34px;border-radius:50%;background:#1c1917;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#chatGo:hover{background:#f59e0b;}
+#chatGo svg{width:13px;height:13px;}
+</style>
+
+<div id="chatBtn" onclick="chatToggle()">
+  <div id="chatDot"></div>
+  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+    <circle cx="14" cy="12" r="7.5" fill="#fde047"/>
+    <ellipse cx="11" cy="11" rx="2" ry="2.5" fill="#fffbeb"/>
+    <ellipse cx="17" cy="11" rx="2" ry="2.5" fill="#fffbeb"/>
+    <path d="M10 15 Q14 19 18 15" stroke="#fffbeb" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+    <circle cx="8" cy="6.5" r="1.3" fill="#fde047" opacity=".8"/>
+    <circle cx="20" cy="6.5" r="1.3" fill="#fde047" opacity=".8"/>
+    <circle cx="14" cy="4.5" r="1.3" fill="#fde047" opacity=".8"/>
+  </svg>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-// CURSOR
-const C=document.getElementById('cur'),R=document.getElementById('cur-ring');
-let mx=0,my=0,rx=0,ry=0,on=false;
-document.addEventListener('mousemove',e=>{
-  mx=e.clientX; my=e.clientY;
-  C.style.left=mx+'px'; C.style.top=my+'px';
-  if(!on){on=true;C.classList.add('on');R.classList.add('on');document.body.classList.add('con');}
-});
-(function rf(){rx+=(mx-rx)*.13;ry+=(my-ry)*.13;R.style.left=rx+'px';R.style.top=ry+'px';requestAnimationFrame(rf)})();
-document.querySelectorAll('a,button,.sug,.skill-card,.project-card').forEach(el=>{
-  el.addEventListener('mouseenter',()=>{C.classList.add('big');R.classList.add('big')});
-  el.addEventListener('mouseleave',()=>{C.classList.remove('big');R.classList.remove('big')});
-});
+<div id="chatPanel">
+  <div id="chatTop">
+    <div id="chatAv">
+      <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+        <circle cx="12" cy="10" r="5.5" fill="white" opacity=".92"/>
+        <ellipse cx="9.5" cy="9" rx="1.6" ry="2" fill="#f59e0b"/>
+        <ellipse cx="14.5" cy="9" rx="1.6" ry="2" fill="#f59e0b"/>
+        <path d="M9 13 Q12 16 15 13" stroke="#f59e0b" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div>
+      <div id="chatTitle">Sharbel AI</div>
+      <div id="chatSub">ask me anything</div>
+    </div>
+    <button id="chatClose" onclick="chatToggle()">&#x2715;</button>
+  </div>
+  <div id="chatMsgs">
+    <div class="cmsg b">Hi! I am Sharbel AI assistant. Ask me about his skills, projects, GitHub, or how to contact him!</div>
+  </div>
+  <div id="chatQs">
+    <button class="cq" onclick="chatAsk(this)">Skills</button>
+    <button class="cq" onclick="chatAsk(this)">Projects</button>
+    <button class="cq" onclick="chatAsk(this)">GitHub</button>
+    <button class="cq" onclick="chatAsk(this)">Available?</button>
+    <button class="cq" onclick="chatAsk(this)">Contact</button>
+  </div>
+  <div id="chatInpWrap">
+    <input id="chatIn" type="text" placeholder="Type a message...">
+    <button id="chatGo" onclick="chatSend()">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="#fef08a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</div>
 
-// SKILL BARS — animate after 500ms so they're always visible
-setTimeout(()=>{
-  document.querySelectorAll('.sb-fill').forEach(b=>{ b.style.width=b.dataset.w+'%'; });
-},500);
-
-// SCROLL FADE — elements start visible, add hidden class then remove it
-document.querySelectorAll('.skill-card,.project-card,.tl-item,.gh-box,.edu-card').forEach(el=>{
-  el.classList.add('fade-in');
-  el.classList.add('hidden');
+<script>
+var _isOpen = false;
+function chatToggle(){
+  _isOpen = !_isOpen;
+  document.getElementById("chatPanel").className = _isOpen ? "show" : "";
+}
+document.getElementById("chatIn").addEventListener("keydown", function(e){
+  if(e.key === "Enter") chatSend();
 });
-const obs = new IntersectionObserver(entries=>{
-  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.remove('hidden'); });
-},{threshold:0.08});
-document.querySelectorAll('.fade-in').forEach(el=>obs.observe(el));
-
-// CHAT
-let open=false;
-function toggleChat(){ open=!open; document.getElementById('chatWin').classList.toggle('open',open); }
-const kb={
-  skills:"Sharbel's core skills: Python, SQL, TensorFlow, Keras, Scikit-learn, OpenCV, Mediapipe, NLP (Tokenization & Text Classification), Pandas, NumPy, Feature Engineering, Django, AWS, Matplotlib, Seaborn, Power BI.",
-  projects:"Projects: (1) Thermal System Temperature Prediction — 90% accuracy on 10k+ records. (2) Brain Tumor CNN — 92% accuracy on MRI images. (3) Smart Attendance System (OpenCV) — 95% duplicate elimination. (4) Face Recognition System at Luminar Technolab. (5) 3 Python Backend Apps at Inmakes Infotech.",
-  github:"GitHub: github.com/sharbel78 — ML models, CNN pipelines, computer vision systems, attendance automation and Python backends. All code is public!",
-  experience:"Currently Data Scientist Intern at Luminar Technolab (Jul 2025–Present). Previously Python Developer Intern at Inmakes Infotech (Oct 2023–Jan 2024).",
-  available:"Yes! Actively looking for Data Science, AI Engineering, and ML Engineer roles. Based in Thrissur, Kerala. Open to remote opportunities too.",
-  contact:"Email: mohammedsharbel3@gmail.com | Phone: +91 9656452953 | LinkedIn: linkedin.com/in/mohammedsharbel | GitHub: github.com/sharbel78",
-  education:"B.A. Multimedia from University of Calicut (Nirmala College of Arts & Science). Also Inmakes Infotech Certified (Oct 2023).",
-  def:"Sharbel is a Data Scientist & AI Engineer from Thrissur, Kerala. Specialises in ML, deep learning, and computer vision. His CNN model hit 92% accuracy. Open to work — reach him at mohammedsharbel3@gmail.com!"
+var _kb = {
+  "skills": "Top skills: Python, SQL, TensorFlow, Keras, Scikit-learn, OpenCV, Mediapipe, NLP, Pandas, NumPy, Django, AWS, Power BI, Matplotlib, Seaborn.",
+  "projects": "Projects: (1) Thermal System Prediction 90% accuracy. (2) Brain Tumor CNN 92% accuracy. (3) Smart Attendance OpenCV 95% duplicates removed. (4) Face Recognition at Luminar. (5) 3 Python Backend Apps at Inmakes.",
+  "github": "GitHub: github.com/sharbel78 - all ML models, CNN pipelines and computer vision code is public!",
+  "available": "Yes! Sharbel is open to Data Scientist, AI Engineer and ML Engineer roles. Based in Thrissur, Kerala. Remote ok!",
+  "contact": "Email: mohammedsharbel3@gmail.com | Phone: +91 9656452953 | LinkedIn: linkedin.com/in/mohammedsharbel",
+  "default": "Sharbel is a Data Scientist and AI Engineer from Kerala. Built CNN model with 92% accuracy. Email: mohammedsharbel3@gmail.com"
 };
-function reply(q){
-  const l=q.toLowerCase();
-  if(/skill|python|tensorflow|opencv|tool|tech|language/.test(l)) return kb.skills;
-  if(/project|built|work|attendance|tumor|thermal|face/.test(l)) return kb.projects;
-  if(/github|git|code|repo|open.source/.test(l)) return kb.github;
-  if(/experience|intern|job|luminar|inmakes|career/.test(l)) return kb.experience;
-  if(/availab|hire|open|role|opportunit|looking|remote/.test(l)) return kb.available;
-  if(/contact|email|phone|reach|linkedin|number/.test(l)) return kb.contact;
-  if(/educat|degree|college|university|certif/.test(l)) return kb.education;
-  return kb.def;
+function _getReply(q){
+  var l = q.toLowerCase();
+  if(l.indexOf("skill")>=0||l.indexOf("python")>=0||l.indexOf("tech")>=0) return _kb.skills;
+  if(l.indexOf("project")>=0||l.indexOf("tumor")>=0||l.indexOf("opencv")>=0) return _kb.projects;
+  if(l.indexOf("github")>=0||l.indexOf("code")>=0||l.indexOf("repo")>=0) return _kb.github;
+  if(l.indexOf("avail")>=0||l.indexOf("hire")>=0||l.indexOf("job")>=0||l.indexOf("work")>=0) return _kb.available;
+  if(l.indexOf("contact")>=0||l.indexOf("email")>=0||l.indexOf("phone")>=0) return _kb.contact;
+  return _kb.default;
 }
-function addMsg(t,type){
-  const b=document.getElementById('chatBody');
-  const d=document.createElement('div'); d.className='msg '+type; d.textContent=t;
-  b.appendChild(d); b.scrollTop=b.scrollHeight;
+function _addMsg(txt, cls){
+  var box = document.getElementById("chatMsgs");
+  var d = document.createElement("div");
+  d.className = "cmsg " + cls;
+  d.textContent = txt;
+  box.appendChild(d);
+  box.scrollTop = 99999;
 }
-function showTyping(){
-  const b=document.getElementById('chatBody');
-  const d=document.createElement('div'); d.className='msg bot typing'; d.id='typ';
-  d.innerHTML='<span></span><span></span><span></span>';
-  b.appendChild(d); b.scrollTop=b.scrollHeight;
+function _typing(){
+  var box = document.getElementById("chatMsgs");
+  var d = document.createElement("div");
+  d.className = "cmsg b t";
+  d.id = "_t";
+  d.innerHTML = "<span></span><span></span><span></span>";
+  box.appendChild(d);
+  box.scrollTop = 99999;
 }
-function hideTyping(){ const e=document.getElementById('typ'); if(e) e.remove(); }
-function sendChat(){
-  const i=document.getElementById('chatInp'), v=i.value.trim(); if(!v) return;
-  addMsg(v,'user'); i.value='';
-  document.getElementById('chatSugs').style.d
+function _stopTyping(){
+  var e = document.getElementById("_t");
+  if(e) e.parentNode.removeChild(e);
+}
+function chatSend(){
+  var inp = document.getElementById("chatIn");
+  var v = inp.value.trim();
+  if(!v) return;
+  inp.value = "";
+  document.getElementById("chatQs").style.display = "none";
+  _addMsg(v, "u");
+  _typing();
+  setTimeout(function(){ _stopTyping(); _addMsg(_getReply(v), "b"); }, 1000);
+}
+function chatAsk(btn){
+  var q = btn.textContent;
+  document.getElementById("chatQs").style.display = "none";
+  _addMsg(q, "u");
+  _typing();
+  setTimeout(function(){ _stopTyping(); _addMsg(_getReply(q), "b"); }, 1000);
+}
+// CURSOR
+var C=document.getElementById("cur"), R=document.getElementById("cur-ring");
+var _mx=0,_my=0,_rx=0,_ry=0,_con=false;
+document.addEventListener("mousemove",function(e){
+  _mx=e.clientX; _my=e.clientY;
+  C.style.left=_mx+"px"; C.style.top=_my+"px";
+  if(!_con){_con=true;C.classList.add("on");R.classList.add("on");document.body.classList.add("con");}
+});
+(function rf(){_rx+=(_mx-_rx)*.13;_ry+=(_my-_ry)*.13;R.style.left=_rx+"px";R.style.top=_ry+"px";requestAnimationFrame(rf)})();
+// SKILL BARS
+setTimeout(function(){
+  document.querySelectorAll(".sb-fill").forEach(function(b){ b.style.width=b.dataset.w+"%"; });
+},600);
+// SCROLL FADE
+document.querySelectorAll(".skill-card,.project-card,.tl-item,.gh-box,.edu-card").forEach(function(el){
+  el.classList.add("fade-in","hidden");
+});
+var _obs = new IntersectionObserver(function(entries){
+  entries.forEach(function(e){ if(e.isIntersecting) e.target.classList.remove("hidden"); });
+},{threshold:0.08});
+document.querySelectorAll(".fade-in").forEach(function(el){ _obs.observe(el); });
+</script>
+</body>
+</html>
